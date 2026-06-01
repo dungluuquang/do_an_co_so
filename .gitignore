@@ -1,0 +1,12 @@
+
+venv/
+env/
+ENV/
+
+__pycache__/
+*.pyc
+.env
+phongtro.db
+uploads/
+.DS_Store
+Thumbs.db

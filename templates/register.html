@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow rounded-4 p-4">
+                <h2 class="fw-bold mb-3">Đăng ký tài khoản</h2>
+                <p class="text-muted mb-4">Trở thành chủ trọ/môi giới để đăng tin và quản lý hệ thống hoàn toàn miễn phí.</p>
+                
+                {% if message %}
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+                {% endif %}
+                
+                <form action="{{ url_for('register') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control rounded-3" id="email" name="email" placeholder="Nhập email của bạn" value="{{ request.form.email or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control rounded-3" id="password" name="password" placeholder="Tạo mật khẩu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control rounded-3" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill mb-3">Tạo tài khoản</button>
+                </form>
+                <div class="text-center">
+                    <p class="mb-2">Đã có tài khoản? <a href="{{ url_for('login') }}" class="text-decoration-none fw-bold">Đăng nhập</a></p>
+                    <a href="{{ url_for('index') }}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left me-1"></i>Quay lại trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

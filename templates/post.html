@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow rounded-4 p-4">
+                <h2 class="fw-bold mb-3">Đăng tin mới</h2>
+                <p class="text-muted mb-4">Điền thông tin phòng trọ để tạo tin đăng. Tính năng hiện tại hoạt động như demo.</p>
+                {% if status %}
+                <div class="alert alert-success" role="alert">{{ status }}</div>
+                {% endif %}
+                <form action="{{ url_for('post_room') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tiêu đề tin</label>
+                        <input type="text" class="form-control rounded-3" id="title" name="title" placeholder="Nhập tiêu đề tin đăng" value="{{ request.form.title or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Giá thuê (VNĐ/tháng)</label>
+                        <input type="number" class="form-control rounded-3" id="price" name="price" placeholder="Ví dụ: 3500000" value="{{ request.form.price or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Địa điểm</label>
+                        <input type="text" class="form-control rounded-3" id="location" name="location" placeholder="Ví dụ: Quận 3, TP.HCM" value="{{ request.form.location or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label">Ảnh phòng</label>
+                        <input type="file" class="form-control rounded-3" id="image_file" name="image_file" accept="image/png, image/jpeg, image/gif">
+                        <div class="form-text">Chọn ảnh từ thiết bị của bạn. Nếu không chọn, ảnh mặc định sẽ được dùng.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="area" class="form-label">Diện tích (m²)</label>
+                        <input type="number" class="form-control rounded-3" id="area" name="area" placeholder="Ví dụ: 25" value="{{ request.form.area or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact" class="form-label">Số điện thoại liên hệ</label>
+                        <input type="tel" class="form-control rounded-3" id="contact" name="contact" placeholder="Ví dụ: 0912345678" value="{{ request.form.contact or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amenities" class="form-label">Tiện ích (ngăn cách bằng dấu phẩy)</label>
+                        <input type="text" class="form-control rounded-3" id="amenities" name="amenities" placeholder="Ví dụ: Ban công, Thang máy, WC riêng" value="{{ request.form.amenities or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả</label>
+                        <textarea class="form-control rounded-3" id="description" name="description" rows="4" placeholder="Mô tả ngắn gọn về phòng">{{ request.form.description or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Gửi tin đăng</button>
+                </form>
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="text-decoration-none">Quay lại trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

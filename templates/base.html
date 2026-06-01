@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nền tảng tìm kiếm và cho thuê phòng trọ nhanh chóng, uy tín.">
+    <title>Hệ Thống Quản Lý Phòng Trọ - Kiến Trúc Python</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        /* Các lớp CSS ghi đè nhằm tái hiện chính xác trải nghiệm UI/UX của các ứng dụng TypeScript hiện đại */
+        body {
+            /* Sử dụng màu nền xám nhạt để tạo sự tương phản nổi bật cho các thẻ (cards) trắng */
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex-grow: 1; /* Cấu trúc Flexbox đảm bảo Footer luôn bị đẩy xuống đáy trình duyệt */
+        }
+       .navbar-brand {
+            font-weight: 800;
+            color: #0d6efd!important;
+            letter-spacing: -0.5px;
+        }
+        /* Cố định chiều cao hình ảnh và sử dụng object-fit để chống méo ảnh khi hiển thị */
+       .card-img-top {
+            height: 240px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        /* Hiệu ứng tương tác người dùng khi di chuột qua thẻ phòng trọ */
+       .card-hover:hover.card-img-top {
+            transform: scale(1.05);
+        }
+       .card-hover {
+            overflow: hidden;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+       .card-hover:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1)!important;
+            transform: translateY(-5px);
+        }
+       .price-tag {
+            color: #dc3545;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand fs-4" href="/">
+                <i class="bi bi-houses-fill me-2 text-primary"></i>PhongTro<span class="text-dark">.vn</span>
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto fw-medium">
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-dark" href="{{ url_for('index') }}">Trang chủ</a>
+                    </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-dark" href="{{ url_for('post_room') }}">Đăng tin mới</a>
+                    </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-dark" href="{{ url_for('manage_rooms') }}">Quản lý phòng</a>
+                    </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-dark" href="{{ url_for('manage_utility_bills') }}">Tiện ích</a>
+                    </li>
+                    {% if session.user_email %}
+                    <li class="nav-item d-flex align-items-center me-3">
+                        <span class="nav-link text-dark">Xin chào {{ session.user_email }}</span>
+                    </li>
+                    <li class="nav-item d-flex align-items-center">
+                        <a class="btn btn-outline-secondary px-4 rounded-pill" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-left me-2"></i>Đăng xuất</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item d-flex align-items-center">
+                        <a class="btn btn-primary px-4 rounded-pill" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="py-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-light py-5 mt-auto">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-houses-fill me-2 text-primary"></i>hệ thống phòng trọ</h5>
+                    
+                </div>
+                
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">Hỗ trợ khách hàng</h5>
+                    <ul class="list-unstyled text-muted small lh-lg">
+                        <li><i class="bi bi-telephone me-2"></i>Hotline: 0384774963</li>
+                        <li><i class="bi bi-envelope me-2"></i>Email: dung.luuquang2k5@gmail.com</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</body>
+</html>

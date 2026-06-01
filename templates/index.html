@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    
+    <div class="row mb-5 justify-content-center">
+        <div class="col-lg-9 text-center">
+            <h1 class="display-5 fw-bolder mb-3 text-dark tracking-tight">Tìm kiếm không gian sống lý tưởng</h1>
+            <p class="lead text-muted mb-5">Hàng ngàn lựa chọn nhà trọ, căn hộ dịch vụ và KTX sinh viên đang chờ đón bạn. Dữ liệu được xác thực và cập nhật mới nhất mỗi ngày.</p>
+            
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-4 bg-white">
+                    <form action="/" method="GET" class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0 bg-light" name="q" 
+                                       placeholder="Nhập khu vực, quận, huyện..." 
+                                       value="{{ current_query if current_query else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select form-select-lg bg-light" name="max_price">
+                                <option value="">Mọi mức giá</option>
+                                <option value="2000000" {% if current_price == 2000000 %}selected{% endif %}>Dưới 2 Triệu VNĐ</option>
+                                <option value="4000000" {% if current_price == 4000000 %}selected{% endif %}>Dưới 4 Triệu VNĐ</option>
+                                <option value="6000000" {% if current_price == 6000000 %}selected{% endif %}>Dưới 6 Triệu VNĐ</option>
+                                <option value="10000000" {% if current_price == 10000000 %}selected{% endif %}>Dưới 10 Triệu VNĐ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3">
+                                Tìm phòng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4 align-items-end">
+        <div class="col-md-8">
+            <h3 class="fw-bold mb-0">Danh sách phòng trọ nổi bật</h3>
+            <p class="text-muted mt-2 mb-0">Tìm thấy <strong>{{ rooms|length }}</strong> kết quả phù hợp với tiêu chí của bạn.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <select class="form-select w-auto d-inline-block border-0 bg-light">
+                <option>Sắp xếp: Mới nhất</option>
+                <option>Sắp xếp: Giá từ thấp đến cao</option>
+            </select>
+        </div>
+    </div>
+
+    {% if rooms|length == 0 %}
+        <div class="alert alert-warning py-4 text-center rounded-4 border-0 shadow-sm" role="alert">
+            <i class="bi bi-search fs-1 d-block mb-3 text-warning"></i>
+            <h5 class="fw-bold">Không tìm thấy kết quả phù hợp!</h5>
+            <p class="mb-0">Vui lòng thử thay đổi từ khóa hoặc mở rộng mức giá giới hạn để xem thêm các lựa chọn khác.</p>
+            <a href="/" class="btn btn-outline-warning mt-3">Xóa bộ lọc</a>
+        </div>
+    {% endif %}
+
+    <div class="row g-4 mb-5">
+        {% for room in rooms %}
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card h-100 border-0 bg-white rounded-4 card-hover">
+                <div class="position-relative">
+                    <img src="{{ room.image }}" class="card-img-top" alt="{{ room.title }}">
+                    <span class="position-absolute top-0 start-0 bg-primary text-white px-3 py-1 m-3 rounded-pill shadow-sm small fw-bold">
+                        Cho Thuê
+                    </span>
+                    <span class="position-absolute bottom-0 end-0 bg-white text-danger px-3 py-2 m-3 rounded-3 shadow fw-bold fs-5">
+                        {{ "{:,.0f}".format(room.price)|replace(',', '.') }} ₭
+                    </span>
+                </div>
+                
+                <div class="card-body p-4 d-flex flex-column">
+                    <h5 class="card-title fw-bold mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
+                        <a href="/room/{{ room.id }}" class="text-dark text-decoration-none stretched-link">
+                            {{ room.title }}
+                        </a>
+                    </h5>
+                    
+                    <div class="d-flex text-muted small mb-3">
+                        <div class="me-4"><i class="bi bi-aspect-ratio text-primary me-1"></i> {{ room.area }} m²</div>
+                        <div><i class="bi bi-geo-alt text-danger me-1"></i> {{ room.location.split(',')[0] }}</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {% for amenity in room.amenities[:2] %} <span class="badge bg-light text-dark border fw-normal me-1 mb-1 px-2 py-1">{{ amenity }}</span>
+                        {% endfor %}
+                        {% if room.amenities|length > 2 %}
+                            <span class="badge bg-light text-muted border fw-normal px-2 py-1">+{{ room.amenities|length - 2 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-auto border-top pt-3 d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <span class="ms-2 small fw-medium text-muted">Môi giới xác thực</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

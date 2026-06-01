@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0 m-0">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none"><i class="bi bi-house-door-fill me-1"></i>Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="/?q={{ room.location.split(',')[0] | urlencode }}" class="text-decoration-none">{{ room.location.split(',')[0] }}</a></li>
+            <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 200px;">Chi tiết phòng trọ</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4 position-relative">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <img src="{{ room.image }}" class="w-100" alt="{{ room.title }}" style="height: 450px; object-fit: cover;">
+                
+                <div class="card-body p-4 p-md-5">
+                    <div class="mb-3">
+                        <span class="badge bg-success rounded-pill px-3 py-2 fw-normal mb-2 me-2"><i class="bi bi-check-circle me-1"></i>Đã kiểm duyệt</span>
+                        <span class="text-muted small"><i class="bi bi-clock me-1"></i>Cập nhật 2 giờ trước</span>
+                    </div>
+
+                    <h1 class="fw-bolder mb-3 fs-3">{{ room.title }}</h1>
+                    <p class="text-muted mb-4 fs-6">
+                        <i class="bi bi-geo-alt-fill text-danger me-2"></i>{{ room.location }}
+                    </p>
+                    
+                    <div class="row bg-light rounded-4 p-3 mb-5 mx-0 text-center shadow-sm">
+                        <div class="col-6 border-end border-secondary border-opacity-25">
+                            <span class="text-muted d-block small text-uppercase fw-bold mb-1">Mức giá</span>
+                            <span class="price-tag fs-4">{{ "{:,.0f}".format(room.price)|replace(',', '.') }} <span class="fs-6 text-muted fw-normal">VNĐ/tháng</span></span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block small text-uppercase fw-bold mb-1">Diện tích</span>
+                            <span class="fw-bold text-dark fs-4">{{ room.area }} <span class="fs-6 fw-normal">m²</span></span>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-card-text text-primary me-2"></i>Thông tin mô tả</h4>
+                    <p class="mb-5 text-dark" style="line-height: 1.8; text-align: justify; font-size: 1.05rem;">
+                        {{ room.description | replace('\n', '<br>') | safe }}
+                    </p>
+
+                    <h4 class="fw-bold mb-4 d-flex align-items-center"><i class="bi bi-star-fill text-warning me-2"></i>Tiện ích kèm theo</h4>
+                    <div class="row g-3 mb-2">
+                        {% for amenity in room.amenities %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="p-3 border rounded-3 bg-light d-flex align-items-center transition-hover">
+                                <i class="bi bi-check-circle-fill text-success fs-5 me-3"></i>
+                                <span class="fw-medium text-dark">{{ amenity }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 100px; z-index: 10;">
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="bg-primary bg-gradient p-4 text-center text-white">
+                        <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 70px; height: 70px; font-size: 2rem;">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Chủ nhà / Môi giới</h5>
+                        <p class="small text-white-50 mb-0 mt-1">Hoạt động 15 phút trước</p>
+                    </div>
+                    
+                    <div class="card-body p-4 text-center">
+                        <a href="tel:{{ room.contact }}" class="btn btn-success btn-lg w-100 mb-3 rounded-pill fw-bold shadow-sm d-flex justify-content-center align-items-center py-3">
+                            <i class="bi bi-telephone-outbound-fill me-2 fs-5"></i>
+                            <span class="fs-5">{{ room.contact[:4] }}.{{ room.contact[4:7] }}.{{ room.contact[7:] }}</span>
+                        </a>
+                        
+                        <a href="{{ telegram_contact_link(room.contact) }}" target="_blank" class="btn btn-outline-primary btn-lg w-100 mb-3 rounded-pill fw-bold d-flex justify-content-center align-items-center">
+                            <i class="bi bi-telegram me-2 fs-5"></i>Nhắn tin Telegram
+                        </a>
+
+                        <button class="btn btn-light w-100 mb-4 rounded-pill border" type="button" data-bs-toggle="collapse" data-bs-target="#contactForm">
+                            <i class="bi bi-envelope me-2"></i>Yêu cầu gọi lại
+                        </button>
+
+                        <div class="collapse text-start" id="contactForm">
+                            <div class="card card-body bg-light border-0 rounded-4">
+                                <form action="#" method="POST" class="mt-2">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Tên của bạn</label>
+                                        <input type="text" class="form-control form-control-sm rounded-3" placeholder="Nhập họ tên" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Số điện thoại liên hệ</label>
+                                        <input type="tel" class="form-control form-control-sm rounded-3" placeholder="Ví dụ: 0912345678" required>
+                                    </div>
+                                    <button type="button" class="btn btn-primary w-100 rounded-3 text-uppercase fw-bold" onclick="alert('Tính năng đang được tích hợp. Cảm ơn bạn!')">Gửi yêu cầu</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-danger bg-opacity-10 border-0 p-3 text-center">
+                        <small class="text-danger fw-medium d-block text-start lh-sm">
+                            <i class="bi bi-shield-fill-exclamation me-1 fs-5 float-start mt-1"></i>
+                            Cảnh báo: Tuyệt đối không chuyển tiền cọc hoặc thanh toán trước khi chưa xem phòng và ký hợp đồng trực tiếp.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

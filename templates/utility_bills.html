@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow rounded-4 p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">Quản lý hóa đơn tiện ích</h2>
+                        <p class="text-muted mb-0">Tạo hóa đơn điện/nước, theo dõi trạng thái và gửi nhắc nhở qua Telegram.</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('manage_rooms') }}" class="btn btn-outline-secondary rounded-pill">Quay lại quản lý phòng</a>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="text-muted small">Tổng hóa đơn</div>
+                            <div class="display-6 fw-bold text-primary mt-2">{{ bills | length }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="text-muted small">Tổng tiền thu</div>
+                            <div class="display-6 fw-bold text-success mt-2">{{ "{:,.0f}".format(total_amount)|replace(',', '.') }} ₫</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="text-muted small">Tiêu thụ điện</div>
+                            <div class="display-6 fw-bold text-warning mt-2">{{ total_electricity_usage }} kWh</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="text-muted small">Tiêu thụ nước</div>
+                            <div class="display-6 fw-bold text-info mt-2">{{ total_water_usage }} m³</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">Báo cáo thống kê theo tháng</h5>
+                                <p class="text-muted mb-0">Tổng hợp hóa đơn, doanh thu và tình trạng thanh toán theo kỳ.</p>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ monthly_statistics | length }} kỳ thống kê</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Kỳ</th>
+                                        <th>Số hóa đơn</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Đã thanh toán</th>
+                                        <th>Chờ thanh toán</th>
+                                        <th>Quá hạn</th>
+                                        <th>Điện tiêu thụ</th>
+                                        <th>Nước tiêu thụ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in monthly_statistics %}
+                                    <tr>
+                                        <td class="fw-bold">{{ "%02d"|format(stat.month) }}/{{ stat.year }}</td>
+                                        <td>{{ stat.total_bills }}</td>
+                                        <td>{{ "{:,.0f}".format(stat.total_amount)|replace(',', '.') }} ₫</td>
+                                        <td><span class="badge bg-success rounded-pill">{{ stat.paid_count }}</span></td>
+                                        <td><span class="badge bg-warning text-dark rounded-pill">{{ stat.pending_count }}</span></td>
+                                        <td><span class="badge bg-danger rounded-pill">{{ stat.overdue_count }}</span></td>
+                                        <td>{{ stat.total_electricity_usage }} kWh</td>
+                                        <td>{{ stat.total_water_usage }} m³</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-5">
+                        <div class="card border-0 bg-light rounded-4 p-4 h-100">
+                            <h5 class="fw-bold mb-3">Tạo hóa đơn tiện ích</h5>
+                            <form method="POST" action="{{ url_for('manage_utility_bills') }}" id="calcForm">
+                                <div class="mb-3">
+                                    <label class="form-label" for="room_id">Phòng trọ</label>
+                                    <select class="form-select rounded-3" id="room_id" name="room_id" required>
+                                        <option value="" selected disabled>-- Chọn phòng --</option>
+                                        {% for room in rooms %}
+                                        <option value="{{ room.id }}">{{ room.title }} ({{ room.location }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="tenant_id">Người thuê (tuỳ chọn)</label>
+                                    <select class="form-select rounded-3" id="tenant_id" name="tenant_id">
+                                        <option value="" selected>-- Chọn người thuê (nếu có) --</option>
+                                        {% for t in tenants %}
+                                        <option value="{{ t.id }}">{{ t.name }} - Phòng {{ t.room_id or '-' }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="form-label" for="month">Tháng</label>
+                                        <input type="number" class="form-control rounded-3" id="month" name="month" min="1" max="12" value="{{ now.month if now else '' }}" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label" for="year">Năm</label>
+                                        <input type="number" class="form-control rounded-3" id="year" name="year" min="2020" value="{{ now.year if now else '' }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-6">
+                                        <label class="form-label" for="electricity_start">Chỉ số điện cũ</label>
+                                        <input type="number" class="form-control rounded-3 calc-trigger" id="electricity_start" name="electricity_start" min="0" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label" for="electricity_end">Chỉ số điện mới</label>
+                                        <input type="number" class="form-control rounded-3 calc-trigger" id="electricity_end" name="electricity_end" min="0" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 mt-2">
+                                    <label class="form-label" for="electricity_price">Đơn giá điện (VNĐ/kWh)</label>
+                                    <input type="number" class="form-control rounded-3 calc-trigger" id="electricity_price" name="electricity_price" placeholder="Ví dụ: 3500" value="3500" required>
+                                </div>
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-6">
+                                        <label class="form-label" for="water_start">Chỉ số nước cũ</label>
+                                        <input type="number" class="form-control rounded-3 calc-trigger" id="water_start" name="water_start" min="0" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label" for="water_end">Chỉ số nước mới</label>
+                                        <input type="number" class="form-control rounded-3 calc-trigger" id="water_end" name="water_end" min="0" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 mt-2">
+                                    <label class="form-label" for="water_price">Đơn giá nước (VNĐ/m³)</label>
+                                    <input type="number" class="form-control rounded-3 calc-trigger" id="water_price" name="water_price" placeholder="Ví dụ: 15000" value="15000" required>
+                                </div>
+
+                                <div class="mb-3 mt-3 p-3 bg-white rounded-3 border">
+                                    <span class="text-muted small d-block mb-1 fw-bold">Tổng tiền dự kiến (Tự động tính):</span>
+                                    <div class="fs-4 fw-bold text-danger" id="auto_amount_display">0 ₫</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label" for="due_date">Hạn thanh toán</label>
+                                    <input type="date" class="form-control rounded-3" id="due_date" name="due_date" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill">Lưu hóa đơn</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Danh sách hóa đơn tiện ích</h5>
+                                        <p class="text-muted mb-0">Hệ thống tự động nhắc nhở Telegram.</p>
+                                    </div>
+                                    <span class="badge bg-warning text-dark rounded-pill">Tự động check mỗi phút</span>
+                                </div>
+
+                                <form method="GET" action="{{ url_for('manage_utility_bills') }}" class="mb-4 mt-3 p-3 bg-white rounded-3 border shadow-sm">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-12 col-lg-4">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                                                <input type="text" name="q" class="form-control" placeholder="Tìm tên phòng (VD: Phòng 101)..." value="{{ search_query or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 col-lg-3">
+                                            <select name="status" class="form-select text-muted">
+                                                <option value="">-- Mọi trạng thái --</option>
+                                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>⏳ Chờ thanh toán</option>
+                                                <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>✅ Đã thanh toán</option>
+                                                <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>⚠️ Quá hạn</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 col-lg-3 d-flex gap-2">
+                                            <select name="month" class="form-select text-muted">
+                                                <option value="">Tháng</option>
+                                                {% for m in range(1, 13) %}
+                                                <option value="{{ m }}" {% if month_filter == m %}selected{% endif %}>T{{ m }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <select name="year" class="form-select text-muted">
+                                                <option value="">Năm</option>
+                                                <option value="2026" {% if year_filter == 2026 %}selected{% endif %}>2026</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 col-lg-2 d-grid">
+                                            <button type="submit" class="btn btn-primary fw-bold">Lọc</button>
+                                        </div>
+                                    </div>
+                                    {% if search_query or status_filter or month_filter %}
+                                    <div class="mt-2 text-end">
+                                        <a href="{{ url_for('manage_utility_bills') }}" class="text-decoration-none small text-danger"><i class="bi bi-x-circle me-1"></i>Xóa bộ lọc</a>
+                                    </div>
+                                    {% endif %}
+                                </form>
+
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Phòng</th>
+                                                <th>Kỳ</th>
+                                                <th>Số tiền</th>
+                                                <th>Hạn</th>
+                                                <th>Trạng thái</th>
+                                                <th>Telegram</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for bill in bills %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold">{{ bill.room_title }}</div>
+                                                    <small class="text-muted">ID: {{ bill.room_id }}{% if bill.tenant_name %} · Khách: {{ bill.tenant_name }}{% endif %}</small>
+                                                </td>
+                                                <td>{{ bill.month }}/{{ bill.year }}</td>
+                                                <td>{{ "{:,.0f}".format(bill.amount)|replace(',', '.') }} ₫</td>
+                                                <td>{{ bill.due_date }}</td>
+                                                <td>
+                                                    {% if bill.status == 'paid' %}
+                                                    <span class="badge bg-success rounded-pill">Đã thu</span>
+                                                    {% elif bill.due_date < now.strftime('%Y-%m-%d') %}
+                                                    <span class="badge bg-danger rounded-pill">Quá hạn</span>
+                                                    {% else %}
+                                                    <span class="badge bg-warning text-dark rounded-pill">Đang chờ</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% set telegram_status = bill.get('telegram_status') or 'not_sent' %}
+                                                    {% if telegram_status == 'sent' %}
+                                                    <span class="badge bg-success rounded-pill">Đã gửi</span>
+                                                    {% elif telegram_status == 'failed' %}
+                                                    <span class="badge bg-danger rounded-pill">Lỗi gửi</span>
+                                                    {% else %}
+                                                    <span class="badge bg-secondary rounded-pill">Chưa gửi</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex flex-column gap-2">
+                                                        <!-- Nút Gửi Telegram đã gom mọi chức năng -->
+                                                        <button class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-bold shadow-sm" type="button" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#sendBillModal" 
+                                                            data-bill-id="{{ bill.id }}"
+                                                            data-bill-amount="{{ bill.amount }}" 
+                                                            data-bill-room="{{ bill.room_title }}" 
+                                                            data-bill-month="{{ bill.month }}/{{ bill.year }}">
+                                                            <i class="bi bi-telegram me-1"></i> Gửi TB Telegram
+                                                        </button>
+
+                                                        {% if bill.status != 'paid' %}
+                                                        <form method="POST" action="{{ url_for('mark_utility_bill_paid', bill_id=bill.id) }}">
+                                                            <button class="btn btn-outline-success btn-sm rounded-pill w-100" type="submit">Đã thu tiền</button>
+                                                        </form>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal gửi hóa đơn với đầy đủ tùy chỉnh -->
+<div class="modal fade" id="sendBillModal" tabindex="-1" aria-labelledby="sendBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0 bg-primary bg-opacity-10">
+                <h5 class="modal-title fw-bold text-primary" id="sendBillModalLabel"><i class="bi bi-telegram me-2"></i>Tùy chỉnh & Gửi hóa đơn Telegram</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="" id="sendBillForm">
+                <div class="modal-body p-4">
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold small">Ngân hàng thụ hưởng</label>
+                            <select class="form-select rounded-3" name="bank_code" id="modalBank">
+                                <option value="TCB" {% if def_bank == 'TCB' %}selected{% endif %}>Techcombank (TCB)</option>
+                                <option value="MB" {% if def_bank == 'MB' %}selected{% endif %}>MBBank</option>
+                                <option value="VCB" {% if def_bank == 'VCB' %}selected{% endif %}>Vietcombank (VCB)</option>
+                                <option value="ACB" {% if def_bank == 'ACB' %}selected{% endif %}>ACB</option>
+                                <option value="VPB" {% if def_bank == 'VPB' %}selected{% endif %}>VPBank</option>
+                                <option value="BIDV" {% if def_bank == 'BIDV' %}selected{% endif %}>BIDV</option>
+                                <option value="ICB" {% if def_bank == 'ICB' %}selected{% endif %}>VietinBank</option>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold small">Số tài khoản <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" name="account_number" id="modalAccount" value="{{ def_acc }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Tên chủ tài khoản <span class="text-muted fw-normal">(Viết hoa không dấu)</span> <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" name="account_name" id="modalAccountName" value="{{ default_merchant_name }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Số tiền (VNĐ)</label>
+                        <input type="text" class="form-control rounded-3 font-monospace fw-bold text-danger" name="custom_amount" id="modalAmount" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Nội dung chuyển khoản</label>
+                        <input type="text" class="form-control rounded-3" name="custom_note" id="modalNote" required>
+                    </div>
+
+                    <div class="alert alert-info small mb-0 rounded-3 border-0 bg-opacity-50">
+                        <i class="bi bi-info-circle-fill me-1"></i> Hệ thống sẽ tạo mã QR mới nhất dựa trên các thông tin này và tự động gửi kèm tin nhắn văn bản vào máy khách.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold"><i class="bi bi-send-fill me-2"></i>Phát hành Hóa Đơn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const triggers = document.querySelectorAll('.calc-trigger');
+        const display = document.getElementById('auto_amount_display');
+
+        function calculateTotal() {
+            const eStart = parseFloat(document.getElementById('electricity_start').value) || 0;
+            const eEnd = parseFloat(document.getElementById('electricity_end').value) || 0;
+            const ePrice = parseFloat(document.getElementById('electricity_price').value) || 0;
+
+            const wStart = parseFloat(document.getElementById('water_start').value) || 0;
+            const wEnd = parseFloat(document.getElementById('water_end').value) || 0;
+            const wPrice = parseFloat(document.getElementById('water_price').value) || 0;
+
+            const eUsage = eEnd >= eStart ? (eEnd - eStart) : 0;
+            const wUsage = wEnd >= wStart ? (wEnd - wStart) : 0;
+
+            const total = (eUsage * ePrice) + (wUsage * wPrice);
+
+            display.innerText = total.toLocaleString('vi-VN') + ' ₫';
+        }
+
+        triggers.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+
+        // Xử lý nạp dữ liệu động vào Modal Gửi Telegram
+        const sendBillModal = document.getElementById('sendBillModal');
+        sendBillModal?.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const billId = button.getAttribute('data-bill-id');
+            const amount = button.getAttribute('data-bill-amount');
+            const room = button.getAttribute('data-bill-room');
+            const month = button.getAttribute('data-bill-month');
+            
+            // Đặt action link
+            const form = document.getElementById('sendBillForm');
+            form.action = `/manage/utility-bills/${billId}/send`;
+
+            // Nạp dữ liệu vào form
+            document.getElementById('modalAmount').value = parseFloat(amount).toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('modalNote').value = `Tien phong ${room} thang ${month}`;
+        });
+
+        // Hiệu ứng Loading
+        const sendBillForm = document.getElementById('sendBillForm');
+        sendBillForm?.addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+            btn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}

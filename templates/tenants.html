@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold">Quản lý Người Thuê</h2>
+            <p class="text-muted">Thêm, xem và xoá thông tin người thuê và hợp đồng.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('manage_rooms') }}" class="btn btn-outline-secondary">Quay lại Dashboard</a>
+        </div>
+    </div>
+
+    {% if status %}
+    <div class="alert alert-success">{{ status }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <h5 class="fw-bold mb-3">Thêm người thuê mới</h5>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Tên</label>
+                        <input name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">SĐT</label>
+                        <input name="phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CCCD/CMND</label>
+                        <input name="id_number" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phòng</label>
+                        <select name="room_id" class="form-select" required>
+                            <option value="" selected disabled>-- Chọn phòng --</option>
+                            {% for r in rooms %}
+                            <option value="{{ r.id }}">{{ r.title }} - {{ r.location }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày bắt đầu</label>
+                        <input name="start_date" type="date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày kết thúc</label>
+                        <input name="end_date" type="date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tiền cọc (VNĐ)</label>
+                        <input name="deposit" type="number" class="form-control" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ảnh hợp đồng</label>
+                        <input name="contract_file" type="file" class="form-control">
+                    </div>
+                    <button class="btn btn-primary">Lưu người thuê</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <h5 class="fw-bold mb-3">Danh sách người thuê</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Tên</th><th>Phòng</th><th>Hạn hợp đồng</th><th>Tiền cọc</th><th></th></tr></thead>
+                        <tbody>
+                            {% for t in tenants %}
+                            <tr>
+                                <td>{{ t.name }}</td>
+                                <td>{{ t.room_id }}</td>
+                                <td>{{ t.start_date or '-' }} → {{ t.end_date or '-' }}</td>
+                                <td>{{ t.deposit or 0 }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('delete_tenant', tenant_id=t.id) }}" onsubmit="return confirm('Xoá người thuê này?')">
+                                        <button class="btn btn-sm btn-outline-danger">Xoá</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

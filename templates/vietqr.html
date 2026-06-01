@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card p-4 rounded-4 shadow-sm text-center">
+        <h4 class="fw-bold">Mã QR Thanh toán</h4>
+        <p class="text-muted mb-3">Quét để thanh toán nhanh mà không cần copy số tài khoản.</p>
+        <img src="{{ qr_url }}" alt="VietQR" style="max-width:320px;">
+
+        <div class="row text-start mt-4">
+            <div class="col-md-6 mb-2"><strong>STK/Ngân hàng:</strong> {{ account }}</div>
+            <div class="col-md-6 mb-2"><strong>Số tiền:</strong> {{ amount }} ₫</div>
+            <div class="col-md-6 mb-2"><strong>Nội dung:</strong> {{ note or '-' }}</div>
+            <div class="col-md-6 mb-2"><strong>Người nhận:</strong> {{ merchant_name }}</div>
+            <div class="col-md-6 mb-2"><strong>Thành phố:</strong> {{ merchant_city }}</div>
+        </div>
+
+        <div class="mt-3">
+            <a href="{{ qr_url }}" target="_blank" class="btn btn-outline-primary">Tải ảnh QR</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

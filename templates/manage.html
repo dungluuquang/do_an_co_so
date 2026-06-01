@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">Bảng điều khiển Quản lý</h2>
+            <p class="text-muted mb-0">Tổng quan nhanh về tình trạng phòng, doanh thu và khách sắp hết hạn hợp đồng.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('manage_utility_bills') }}" class="btn btn-warning rounded-pill">Quản lý tiện ích</a>
+            <a href="{{ url_for('post_room') }}" class="btn btn-success rounded-pill">Đăng tin mới</a>
+            <a href="{{ url_for('manage_tenants') }}" class="btn btn-outline-primary rounded-pill">Quản lý người thuê</a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <div class="text-muted small">Tổng số phòng</div>
+                <div class="display-6 fw-bold text-primary mt-2">{{ total_rooms }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <div class="text-muted small">Phòng đã thuê</div>
+                <div class="display-6 fw-bold text-success mt-2">{{ rented_rooms }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <div class="text-muted small">Phòng trống</div>
+                <div class="display-6 fw-bold text-warning mt-2">{{ empty_rooms }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <div class="text-muted small">Tỷ lệ lấp đầy</div>
+                <div class="display-6 fw-bold text-info mt-2">{{ occupancy_rate|round|int }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card p-4 rounded-4 shadow-sm h-100">
+                <h5 class="fw-bold">Tổng quan doanh thu</h5>
+                <p class="text-muted">Tổng doanh thu dự kiến (thuê tháng hiện tại) so với thu thực tế (hóa đơn đã thu).</p>
+                <canvas id="revenueChart" height="160"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-4 rounded-4 shadow-sm h-100">
+                <h5 class="fw-bold">Tình trạng phòng</h5>
+                <p class="text-muted">Phân bổ trạng thái phòng hiện tại.</p>
+                <canvas id="occupancyChart" height="160"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <h5 class="fw-bold">Khách sắp hết hạn hợp đồng</h5>
+                <p class="text-muted">Danh sách khách có hợp đồng kết thúc trong 30 ngày tới.</p>
+
+                {% if expiring|length == 0 %}
+                    <div class="alert alert-info">Không có khách nào sắp hết hạn trong 30 ngày.</div>
+                {% else %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in expiring %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ item.tenant.name }}</div>
+                                <div class="text-muted small">SĐT: {{ item.tenant.phone or '-' }} · Phòng: {{ item.tenant.room_id or '-' }}</div>
+                            </div>
+                            <span class="badge bg-warning rounded-pill">{{ item.days_left }} ngày</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card p-4 rounded-4 shadow-sm">
+                <h5 class="fw-bold">Danh sách phòng (nhanh)</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr><th>Tiêu đề</th><th>Giá</th><th>Trạng thái</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for r in rooms %}
+                            <tr>
+                                <td>{{ r.title }}</td>
+                                <td>{{ "{:,.0f}".format(r.price)|replace(',', '.') }} ₫</td>
+                                <td>
+                                    {% if r.status == 'rented' %}
+                                        <span class="badge bg-success">Đã thuê</span>
+                                    {% elif r.status == 'repair' %}
+                                        <span class="badge bg-secondary">Đang sửa chữa</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Trống</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+
+    const revenueData = {
+        labels: ['Dự kiến', 'Đã thu'],
+        datasets: [{
+            label: 'VNĐ',
+            backgroundColor: ['#0d6efd', '#198754'],
+            data: [{{ expected_monthly_rent or 0 }}, {{ actual_collected or 0 }}]
+        }]
+    };
+
+    const revenueChart = new Chart(revenueCtx, {
+        type: 'bar',
+        data: revenueData,
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    const occData = {
+        labels: ['Đã thuê', 'Trống', 'Đang sửa chữa'],
+        datasets: [{
+            data: [{{ rented_rooms }}, {{ empty_rooms }}, {{ repair_rooms }}],
+            backgroundColor: ['#198754', '#ffc107', '#6c757d']
+        }]
+    };
+
+    const occChart = new Chart(occupancyCtx, {
+        type: 'pie',
+        data: occData,
+        options: { responsive: true }
+    });
+</script>
+{% endblock %}

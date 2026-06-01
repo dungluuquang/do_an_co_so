@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow rounded-4 p-4">
+                <h2 class="fw-bold mb-3">Chỉnh sửa phòng trọ</h2>
+                <p class="text-muted mb-4">Cập nhật nội dung tin đăng để duy trì thông tin chính xác.</p>
+                {% if status %}
+                <div class="alert alert-success" role="alert">{{ status }}</div>
+                {% endif %}
+                <form action="{{ url_for('edit_room', room_id=room.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tiêu đề tin</label>
+                        <input type="text" class="form-control rounded-3" id="title" name="title" value="{{ room.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Giá thuê (VNĐ/tháng)</label>
+                        <input type="number" class="form-control rounded-3" id="price" name="price" value="{{ room.price }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="area" class="form-label">Diện tích (m²)</label>
+                        <input type="number" class="form-control rounded-3" id="area" name="area" value="{{ room.area }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Địa điểm</label>
+                        <input type="text" class="form-control rounded-3" id="location" name="location" value="{{ room.location }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact" class="form-label">Số điện thoại liên hệ</label>
+                        <input type="tel" class="form-control rounded-3" id="contact" name="contact" value="{{ room.contact }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amenities" class="form-label">Tiện ích (ngăn cách bằng dấu phẩy)</label>
+                        <input type="text" class="form-control rounded-3" id="amenities" name="amenities" value="{{ room.amenities | join(', ') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả</label>
+                        <textarea class="form-control rounded-3" id="description" name="description" rows="4">{{ room.description }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill">Lưu thay đổi</button>
+                </form>
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('manage_rooms') }}" class="text-decoration-none">Quay lại quản lý phòng</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
